@@ -9,5 +9,5 @@ Scans Python project for all module imports that are NOT part of Python standard
 * Clone repository and run the script
 * Install using pip
 ```shell
-$pip install module-scanner
+$ pip install module-scanner
 ```
