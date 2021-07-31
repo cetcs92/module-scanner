@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# 
 import os
 import re
 import importlib
@@ -25,23 +27,36 @@ class ImportScan(object):
 
     def _scan_file(self, file):
         with open(file, 'r') as pyfile:
-            file_contents = pyfile.read()
-            if self._import_re.search(file_contents):
-                for import_found in self._import_re.findall(file_contents):
-                    standard_module = True
-                    try:
-                        module = importlib.import_module(import_found)
-                    except ModuleNotFoundError:
-                        standard_module = False
-                    else:
-                        if 'site-packages' in module.__file__:
+            try:
+                file_contents = pyfile.read()
+            except:
+                print('Unable to parse file {}. Skipping ...'.format(file))
+            else:
+                if self._import_re.search(file_contents):
+                    for import_found in self._import_re.findall(file_contents):
+                        standard_module = True
+                        try:
+                            module = importlib.import_module(import_found)
+                        except ModuleNotFoundError:
                             standard_module = False
-                    if not standard_module:
-                        self._imports_found.add(import_found)
+                        else:
+                            try:
+                                loc = module.__spec__.origin or ''
+                            except AttributeError:
+                                try:
+                                    loc = module.__file__ or ''
+                                except AttributeError:
+                                    loc = ''
+                            if 'site-packages' in loc:
+                                standard_module = False
+                        if not standard_module:
+                            self._imports_found.add(import_found)
 
 
-
-if __name__ == '__main__':
+def main():
     s = ImportScan()
     s.scan()
     s.print()
+
+if __name__ == '__main__':
+    main()
