@@ -6,7 +6,7 @@ import importlib
 
 class ImportScan(object):
     def __init__(self):
-        self._import_re = re.compile(r'(?:from|import)[ \t]+([a-zA-Z0-9_]+)(?:.*)')
+        self._import_re = re.compile(r'(?:^|\n[ \t]*)(?:from|import)[ \t]+([a-zA-Z0-9_]+)(?:.*)')
         self._imports_found = set()
 
     def scan(self, path=os.getcwd()):
