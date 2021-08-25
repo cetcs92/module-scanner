@@ -47,7 +47,7 @@ class ImportScan(object):
                                     loc = module.__file__ or ''
                                 except AttributeError:
                                     loc = ''
-                            if 'site-packages' in loc:
+                            if 'site-packages' in loc or 'dist-packages' in loc:
                                 standard_module = False
                         if not standard_module:
                             self._imports_found.add(import_found)

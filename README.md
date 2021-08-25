@@ -1,4 +1,4 @@
-# Module Scanner
+# Module Scan
 Scans Python project for all module imports that are NOT part of Python standard library regardless of whether the package is installed or not. Since this module does not consult pip installed modules, this scan can be performed on CI.
 ## Features
 * Scans source code repository recursively for module imports
@@ -9,5 +9,11 @@ Scans Python project for all module imports that are NOT part of Python standard
 * Clone repository and run the script
 * Install using pip
 ```shell
-$ pip install module-scanner
+$ pip install module-scan
+```
+
+## Scan repository
+```shell
+$ cd <repo root>
+$ module-scan
 ```
