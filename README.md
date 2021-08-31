@@ -17,3 +17,19 @@ $ pip install module-scan
 $ cd <repo root>
 $ module-scan
 ```
+
+## Import in your code
+```shell
+from module_scan import ImportScan
+
+s = ImportScan()
+
+# scan repository in current working directory
+s.scan() 
+
+# OR scan repository in a different location
+# s.scan(<path to repository to scan>)
+
+# Print the modules discovered
+print(s._imports_found)
+```
