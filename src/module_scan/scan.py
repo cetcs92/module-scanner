@@ -1,36 +1,61 @@
 #!/usr/bin/env python
-# 
+#
+
+"""
+Scan the modules/files to identify imports
+
+"""
+
 import os
 import re
 import importlib
 from functools import reduce
 
 
-white_space = r'[ \t]*'
-white_space_plus = r'[ \t]+'
-non_capture_beginning_of_line = r'(?:^|\n' + white_space + r')'
-non_capture_import_statement = r'(?:from|import)'
-capture_module_name = r'([a-zA-Z0-9_]+)'
-optional_more_modules = r'(?:' + white_space + r'[,]' + white_space + capture_module_name + r')*'
+WHITE_SPACE = r'[ \t]*'
+WHITE_SPACE_PLUS = r'[ \t]+'
+NON_CAPTURE_BEGINNING_OF_LINE = r'(?:^|\n' + WHITE_SPACE + r')'
+NON_CAPTURE_IMPORT_STATEMENT = r'(?:from|import)'
+CAPTURE_MODULE_NAME = r'([a-zA-Z0-9_]+)'
+OPTIONAL_MORE_MODULES = r'(?:' + WHITE_SPACE + r'[,]' + WHITE_SPACE + CAPTURE_MODULE_NAME + r')*'
 
 
-class ImportScan(object):
+class ImportScan():
+
+    """
+    Scan imports from the modules/files
+    """
+
     def __init__(self):
         self._import_re = re.compile(
-            non_capture_beginning_of_line +
-            non_capture_import_statement +
-            white_space_plus +
-            capture_module_name +
-            optional_more_modules
+            NON_CAPTURE_BEGINNING_OF_LINE +
+            NON_CAPTURE_IMPORT_STATEMENT +
+            WHITE_SPACE_PLUS +
+            CAPTURE_MODULE_NAME +
+            OPTIONAL_MORE_MODULES
         )
         self._imports_found = set()
 
     def scan(self, path=os.getcwd()):
+
+        """
+        Scan the module/files for imports from particular path (optional)
+
+        Args:
+            path (String, optional): Path for module which is to be scanned.\
+                Defaults to os.getcwd().
+        """
+
         for subdir, _, files in os.walk(path):
             for file in [_ for _ in files if _.endswith('.py')]:
                 self._scan_file(os.path.join(subdir, file))
 
     def print(self):
+
+        """
+        Print discovered imports
+        """
+
         if self._imports_found:
             for _ in self._imports_found:
                 print(_)
@@ -38,10 +63,21 @@ class ImportScan(object):
             print('No pip module imports discovered')
 
     def packages(self):
+        """
+        Scan Packages
+        """
         for _ in self._imports_found:
             yield _
 
     def _scan_file(self, file):
+
+        """
+        Scanning file to find out the imports
+
+        Args:
+            file (String):Path of a file that is to be scanned for imports
+        """
+
         with open(file, 'r') as pyfile:
             try:
                 file_contents = pyfile.read()
@@ -51,8 +87,20 @@ class ImportScan(object):
                 self._scan_file_contents(file_contents)
 
     def _scan_file_contents(self, file_contents):
+
+        """
+        Scan the file contents to find the imports
+
+        Args:
+            file_contents (String):
+            content of file that is to be scanned to find imports
+        """
+
         if self._import_re.search(file_contents):
-            imports_found = {_ for _ in reduce(lambda l1,l2:l1+l2, self._import_re.findall(file_contents)) if _.strip()}
+            imports_found = {_ for _ in \
+                reduce(lambda l1,l2:l1+l2, \
+                self._import_re.findall(file_contents)) \
+                if _.strip()}
             for import_found in imports_found:
                 standard_module = True
                 try:
@@ -74,9 +122,14 @@ class ImportScan(object):
 
 
 def main():
-    s = ImportScan()
-    s.scan()
-    s.print()
+
+    """
+    Main function Entry point to run the code
+    """
+
+    module_scan = ImportScan()
+    module_scan.scan()
+    module_scan.print()
 
 if __name__ == '__main__':
     main()
