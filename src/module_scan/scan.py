@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 #
-
 """
 Scan the modules/files to identify imports
 
