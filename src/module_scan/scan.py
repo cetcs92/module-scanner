@@ -79,10 +79,10 @@ class ImportScan():
             file (String):Path of a file that is to be scanned for imports
         """
 
-        with open(file, 'r') as pyfile:
+        with open(file, 'r', encoding='utf-8') as pyfile:
             try:
                 file_contents = pyfile.read()
-            except:
+            except UnicodeDecodeError:
                 print('Unable to parse file {}. Skipping ...'.format(file))
             else:
                 self._scan_file_contents(file_contents)
