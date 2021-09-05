@@ -34,6 +34,7 @@ class ImportScan():
             OPTIONAL_MORE_MODULES
         )
         self._imports_found = set()
+        self._repo_root = None
 
     def scan(self, path=os.getcwd()):
 
@@ -45,6 +46,7 @@ class ImportScan():
                 Defaults to os.getcwd().
         """
 
+        self._repo_root = path
         for subdir, _, files in os.walk(path):
             for file in [_ for _ in files if _.endswith('.py')]:
                 self._scan_file(os.path.join(subdir, file))
@@ -77,10 +79,10 @@ class ImportScan():
             file (String):Path of a file that is to be scanned for imports
         """
 
-        with open(file, 'r') as pyfile:
+        with open(file, 'r', encoding='utf-8') as pyfile:
             try:
                 file_contents = pyfile.read()
-            except:
+            except UnicodeDecodeError:
                 print('Unable to parse file {}. Skipping ...'.format(file))
             else:
                 self._scan_file_contents(file_contents)
@@ -101,12 +103,15 @@ class ImportScan():
                 self._import_re.findall(file_contents)) \
                 if _.strip()}
             for import_found in imports_found:
-                standard_module = True
+                # assume all are standard python modules
+                module_type = 'standard'
                 try:
                     module = importlib.import_module(import_found)
                 except ModuleNotFoundError:
-                    standard_module = False
+                    # Possible pip package, but PYTHONPATH / virtual env not set?
+                    module_type = 'pip ?'
                 else:
+                    # determine the module is pip package or local import
                     try:
                         loc = module.__spec__.origin or ''
                     except AttributeError:
@@ -115,8 +120,10 @@ class ImportScan():
                         except AttributeError:
                             loc = ''
                     if 'site-packages' in loc or 'dist-packages' in loc:
-                        standard_module = False
-                if not standard_module:
+                        module_type = 'pip'
+                    elif loc.startswith(self._repo_root):
+                        module_type = 'local repo'
+                if module_type not in ['standard', 'local repo']:
                     self._imports_found.add(import_found)
 
 
