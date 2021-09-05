@@ -34,6 +34,7 @@ class ImportScan():
             OPTIONAL_MORE_MODULES
         )
         self._imports_found = set()
+        self._repo_root = None
 
     def scan(self, path=os.getcwd()):
 
