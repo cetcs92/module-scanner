@@ -6,17 +6,9 @@ Scan the modules/files to identify imports
 """
 
 import os
-import re
+import ast
 import importlib
 from functools import reduce
-
-
-WHITE_SPACE = r'[ \t]*'
-WHITE_SPACE_PLUS = r'[ \t]+'
-NON_CAPTURE_BEGINNING_OF_LINE = r'(?:^|\n' + WHITE_SPACE + r')'
-NON_CAPTURE_IMPORT_STATEMENT = r'(?:from|import)'
-CAPTURE_MODULE_NAME = r'([a-zA-Z0-9_]+)'
-OPTIONAL_MORE_MODULES = r'(?:' + WHITE_SPACE + r'[,]' + WHITE_SPACE + CAPTURE_MODULE_NAME + r')*'
 
 
 class ImportScan():
@@ -26,13 +18,6 @@ class ImportScan():
     """
 
     def __init__(self):
-        self._import_re = re.compile(
-            NON_CAPTURE_BEGINNING_OF_LINE +
-            NON_CAPTURE_IMPORT_STATEMENT +
-            WHITE_SPACE_PLUS +
-            CAPTURE_MODULE_NAME +
-            OPTIONAL_MORE_MODULES
-        )
         self._imports_found = set()
         self._repo_root = None
 
@@ -85,9 +70,9 @@ class ImportScan():
             except UnicodeDecodeError:
                 print('Unable to parse file {}. Skipping ...'.format(file))
             else:
-                self._scan_file_contents(file_contents)
+                self._find_all_imports(file_contents)
 
-    def _scan_file_contents(self, file_contents):
+    def _find_all_imports(self, file_contents):
 
         """
         Scan the file contents to find the imports
@@ -97,34 +82,43 @@ class ImportScan():
             content of file that is to be scanned to find imports
         """
 
-        if self._import_re.search(file_contents):
-            imports_found = {_ for _ in \
-                reduce(lambda l1,l2:l1+l2, \
-                self._import_re.findall(file_contents)) \
-                if _.strip()}
-            for import_found in imports_found:
-                # assume all are standard python modules
-                module_type = 'standard'
+        ast_parse = ast.parse(file_contents)
+        for import_found in self._find_imports(ast_parse):
+            # assume all are standard python modules
+            module_type = 'standard'
+            try:
+                module = importlib.import_module(import_found)
+            except ModuleNotFoundError:
+                # Possible pip package, but PYTHONPATH / virtual env not set?
+                module_type = 'pip ?'
+            else:
+                # determine the module is pip package or local import
                 try:
-                    module = importlib.import_module(import_found)
-                except ModuleNotFoundError:
-                    # Possible pip package, but PYTHONPATH / virtual env not set?
-                    module_type = 'pip ?'
-                else:
-                    # determine the module is pip package or local import
+                    loc = module.__spec__.origin or ''
+                except AttributeError:
                     try:
-                        loc = module.__spec__.origin or ''
+                        loc = module.__file__ or ''
                     except AttributeError:
-                        try:
-                            loc = module.__file__ or ''
-                        except AttributeError:
-                            loc = ''
-                    if 'site-packages' in loc or 'dist-packages' in loc:
-                        module_type = 'pip'
-                    elif loc.startswith(self._repo_root):
-                        module_type = 'local repo'
-                if module_type not in ['standard', 'local repo']:
-                    self._imports_found.add(import_found)
+                        loc = ''
+                if 'site-packages' in loc or 'dist-packages' in loc:
+                    module_type = 'pip'
+                elif loc.startswith(self._repo_root):
+                    module_type = 'local repo'
+            if module_type not in ['standard', 'local repo']:
+                self._imports_found.add(import_found)
+
+    def _find_imports(self, ast_parse):
+        """
+        Use AST to find all imports in the source code
+        """
+        for _ in ast_parse.body:
+            if type(_) == ast.Import:
+                for import_found in _.names:
+                    yield import_found.name
+            elif type(_) == ast.ImportFrom:
+                yield _.module
+            elif 'body' in _.__dict__:
+                yield from self._find_imports(_)
 
 
 def main():
