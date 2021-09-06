@@ -45,6 +45,9 @@ class ImportScan():
             path (String, optional): Path for module which is to be scanned.\
                 Defaults to os.getcwd().
         """
+        if not os.path.exists(path):
+            print("Invalid path: {}".format(path))
+            return
 
         self._repo_root = path
         for subdir, _, files in os.walk(path):
