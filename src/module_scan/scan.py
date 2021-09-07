@@ -10,6 +10,20 @@ import ast
 import importlib
 
 
+def find_imports(source):
+
+    """
+    Use AST to find all imports in the source code
+    """
+
+    for _ in ast.walk(ast.parse(source)):
+        if isinstance(_, ast.Import):
+            for import_found in _.names:
+                yield import_found.name.split('.')[0]
+        elif isinstance(_, ast.ImportFrom) and _.module:
+            yield _.module.split('.')[0]
+
+
 class ImportScan():
 
     """
@@ -84,7 +98,7 @@ class ImportScan():
             content of file that is to be scanned to find imports
         """
 
-        for import_found in self._find_imports(file_contents):
+        for import_found in find_imports(file_contents):
             # assume all are standard python modules
             module_type = 'standard'
             try:
@@ -107,19 +121,6 @@ class ImportScan():
                     module_type = 'local repo'
             if module_type not in ['standard', 'local repo']:
                 self._imports_found.add(import_found)
-
-    def _find_imports(self, file_contents):
-
-        """
-        Use AST to find all imports in the source code
-        """
-
-        for _ in ast.walk(ast.parse(file_contents)):
-            if isinstance(_, ast.Import):
-                for import_found in _.names:
-                    yield import_found.name.split('.')[0]
-            elif isinstance(_, ast.ImportFrom) and _.module:
-                yield _.module.split('.')[0]
 
 
 def main():
