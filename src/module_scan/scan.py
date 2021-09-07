@@ -112,11 +112,11 @@ class ImportScan():
         Use AST to find all imports in the source code
         """
         for _ in ast_parse.body:
-            if type(_) == ast.Import:
+            if isinstance(_, ast.Import):
                 for import_found in _.names:
-                    yield import_found.name
-            elif type(_) == ast.ImportFrom:
-                yield _.module
+                    yield import_found.name.split('.')[0]
+            elif isinstance(_, ast.ImportFrom) and _.module:
+                yield _.module.split('.')[0]
             elif 'body' in _.__dict__:
                 yield from self._find_imports(_)
 
