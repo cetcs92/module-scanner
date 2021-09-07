@@ -33,7 +33,10 @@ class ImportScan():
         self._repo_root = path
         for subdir, _, files in os.walk(path):
             for file in [_ for _ in files if _.endswith('.py')]:
-                self._scan_file(os.path.join(subdir, file))
+                try:
+                    self._scan_file(os.path.join(subdir, file))
+                except SyntaxError:
+                    print('# SyntaxError; Skipping file {}'.format(file))
 
     def print(self):
 
@@ -81,8 +84,7 @@ class ImportScan():
             content of file that is to be scanned to find imports
         """
 
-        ast_parse = ast.parse(file_contents)
-        for import_found in self._find_imports(ast_parse):
+        for import_found in self._find_imports(file_contents):
             # assume all are standard python modules
             module_type = 'standard'
             try:
@@ -106,18 +108,18 @@ class ImportScan():
             if module_type not in ['standard', 'local repo']:
                 self._imports_found.add(import_found)
 
-    def _find_imports(self, ast_parse):
+    def _find_imports(self, file_contents):
+
         """
         Use AST to find all imports in the source code
         """
-        for _ in ast_parse.body:
+
+        for _ in ast.walk(ast.parse(file_contents)):
             if isinstance(_, ast.Import):
                 for import_found in _.names:
                     yield import_found.name.split('.')[0]
             elif isinstance(_, ast.ImportFrom) and _.module:
                 yield _.module.split('.')[0]
-            elif 'body' in _.__dict__:
-                yield from self._find_imports(_)
 
 
 def main():
