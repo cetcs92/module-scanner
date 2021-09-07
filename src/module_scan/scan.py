@@ -8,7 +8,6 @@ Scan the modules/files to identify imports
 import os
 import ast
 import importlib
-from functools import reduce
 
 
 class ImportScan():
