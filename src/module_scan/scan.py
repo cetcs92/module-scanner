@@ -47,7 +47,8 @@ class ImportScan():
         self._repo_root = path
         for subdir, directories, files in os.walk(path):
             py_files = [_ for _ in files if _.endswith('.py')]
-            self._cur_local_modules = [_ for _ in directories if not _.startswith('.')] + [_.replace('.py', '') for _ in py_files]
+            self._cur_local_modules = [_ for _ in directories if not _.startswith('.')] +\
+                [_.replace('.py', '') for _ in py_files]
             for file in py_files:
                 try:
                     self._scan_file(os.path.join(subdir, file))
