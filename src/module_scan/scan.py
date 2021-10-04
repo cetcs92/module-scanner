@@ -45,8 +45,10 @@ class ImportScan():
         """
 
         self._repo_root = path
-        for subdir, _, files in os.walk(path):
-            for file in [_ for _ in files if _.endswith('.py')]:
+        for subdir, directories, files in os.walk(path):
+            py_files = [_ for _ in files if _.endswith('.py')]
+            self._cur_local_modules = [_ for _ in directories if not _.startswith('.')] + [_.replace('.py', '') for _ in py_files]
+            for file in py_files:
                 try:
                     self._scan_file(os.path.join(subdir, file))
                 except SyntaxError:
@@ -99,13 +101,14 @@ class ImportScan():
         """
 
         for import_found in find_imports(file_contents):
-            # assume all are standard python modules
-            module_type = 'standard'
+            if import_found in self._cur_local_modules:
+                continue
+
             try:
                 module = importlib.import_module(import_found)
             except ModuleNotFoundError:
                 # Possible pip package, but PYTHONPATH / virtual env not set?
-                module_type = 'pip ?'
+                self._imports_found.add(import_found)
             else:
                 # determine the module is pip package or local import
                 try:
@@ -116,11 +119,7 @@ class ImportScan():
                     except AttributeError:
                         loc = ''
                 if 'site-packages' in loc or 'dist-packages' in loc:
-                    module_type = 'pip'
-                elif loc.startswith(self._repo_root):
-                    module_type = 'local repo'
-            if module_type not in ['standard', 'local repo']:
-                self._imports_found.add(import_found)
+                    self._imports_found.add(import_found)
 
 
 def main():
