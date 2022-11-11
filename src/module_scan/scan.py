@@ -28,7 +28,7 @@ class ImportScan:
     """
     Scan imports from the modules/files
     """
-    ignore_dir_pattern = ['^\..*', 'venv.*', 'site-packages']
+    ignore_dir_pattern = [r'^\..*', 'venv.*', 'site-packages']
 
     def __init__(self):
         self._imports_found = set()
@@ -44,7 +44,7 @@ class ImportScan:
                 Defaults to os.getcwd().
         """
         if not os.path.exists(path):
-            print("Invalid path: {}".format(path))
+            print(f'Invalid path: {path}')
             return
 
         self._repo_root = path
@@ -61,7 +61,7 @@ class ImportScan:
                 try:
                     self._scan_file(os.path.join(subdir, file))
                 except SyntaxError:
-                    print('# SyntaxError; Skipping file {}'.format(file))
+                    print(f'# SyntaxError; Skipping file {file}')
 
     def print(self):
 
@@ -95,7 +95,7 @@ class ImportScan:
             try:
                 file_contents = pyfile.read()
             except UnicodeDecodeError:
-                print('Unable to parse file {}. Skipping ...'.format(file))
+                print(f'Unable to parse file {file}. Skipping ...')
             else:
                 self._find_all_imports(file_contents)
 
