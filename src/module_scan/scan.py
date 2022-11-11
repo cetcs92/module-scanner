@@ -12,7 +12,6 @@ import importlib
 
 
 def find_imports(source):
-
     """
     Use AST to find all imports in the source code
     """
@@ -21,12 +20,11 @@ def find_imports(source):
         if isinstance(_, ast.Import):
             for import_found in _.names:
                 yield import_found.name.split('.')[0]
-        elif isinstance(_, ast.ImportFrom) and _.module:
+        elif isinstance(_, ast.ImportFrom) and _.module and _.level == 0:
             yield _.module.split('.')[0]
 
 
-class ImportScan():
-
+class ImportScan:
     """
     Scan imports from the modules/files
     """
@@ -137,7 +135,6 @@ class ImportScan():
 
 
 def main():
-
     """
     Main function Entry point to run the code
     """
@@ -145,6 +142,7 @@ def main():
     module_scan = ImportScan()
     module_scan.scan()
     module_scan.print()
+
 
 if __name__ == '__main__':
     main()
