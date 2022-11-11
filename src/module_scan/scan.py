@@ -6,6 +6,7 @@ Scan the modules/files to identify imports
 """
 
 import os
+import re
 import ast
 import importlib
 
@@ -29,6 +30,7 @@ class ImportScan():
     """
     Scan imports from the modules/files
     """
+    ignore_dir_pattern = ['^\..*', 'venv.*', 'site-packages']
 
     def __init__(self):
         self._imports_found = set()
@@ -48,7 +50,15 @@ class ImportScan():
             return
 
         self._repo_root = path
-        for subdir, _, files in os.walk(path):
+        for subdir, subdir_list, files in os.walk(path):
+            del_list = []
+            for one_dir in subdir_list:
+                for pat in self.ignore_dir_pattern:
+                    if re.match(pat, one_dir):
+                        del_list.append(one_dir)
+                        break
+            for one_dir in del_list:
+                subdir_list.remove(one_dir)
             for file in [_ for _ in files if _.endswith('.py')]:
                 try:
                     self._scan_file(os.path.join(subdir, file))
