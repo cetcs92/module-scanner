@@ -35,5 +35,17 @@ s.scan()
 # s.scan(<path to repository to scan>)
 
 # Print the modules discovered
+# _imports_found is a dictionary with filename as key and set of packages as value
+# { 
+#   file1: {pkg1, pkg2, ...},
+#   file2: ....
+# }
 print(s._imports_found)
+
+# Let module scan do a pretty print of modules discovered
+s.print()
+
+# Use module-scan info in your code
+for file, pkg in s.packages():
+  # do something with file, pkg
 ```
