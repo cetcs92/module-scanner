@@ -14,8 +14,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setuptools.setup(
     name="module-scan",
     version="1.0.0",
-    author="Rajesh Gopinathapai",
-    author_email="mgrajesh@hotmail.com",
+    author="Rajesh Gopinathapai, Akshad Pai",
+    author_email="mgrajesh@hotmail.com, akshadpai01@gmail.com",
     description="Repository scanner for module imports",
     long_description=long_description,
     long_description_content_type="text/markdown",
